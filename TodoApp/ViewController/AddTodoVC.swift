@@ -7,8 +7,14 @@
 //
 
 import UIKit
+import CoreData
 
 class AddTodoVC: UIViewController {
+    
+    // Mark: - Properties
+    
+    var managedContext: NSManagedObjectContext!
+    var todo: Todo?
     
     // MARK: - Outlets
 
@@ -27,7 +33,15 @@ class AddTodoVC: UIViewController {
                                                selector: #selector(keyboardWillShow(with:)),
                                                name: UIResponder.keyboardWillShowNotification,
                                                object:nil)
+
+        //uploads the keyboard when the + button is touched
+        textView.becomeFirstResponder()
         
+        if let todo = todo{
+            textView.text = todo.title
+            textView.text = todo.title
+            segmentedControl.selectedSegmentIndex = Int(todo.priorityLevel)
+        }
     }
     
     // Mark: - Actions
@@ -45,9 +59,43 @@ class AddTodoVC: UIViewController {
     }
     @IBAction func cancel(_ sender: UIButton) {
         dismiss(animated: true)
+        textView.resignFirstResponder()
+    }
+    
+    fileprivate func dismissDone() {
+        dismiss(animated: true)
+        textView.resignFirstResponder()
     }
     
     @IBAction func done(_ sender: UIButton) {
+        guard let title = textView.text, !title.isEmpty else{
+            return
+        }
+        
+        if let todo = self.todo{
+            todo.title = title
+            todo.priorityLevel = Int16(segmentedControl.selectedSegmentIndex)
+        }
+        else{
+            let todo = Todo(context: managedContext)
+            todo.title = title
+            todo.priorityLevel = Int16(segmentedControl.selectedSegmentIndex)
+            todo.date = Date()
+        }
+        
+       
+    
+        do{
+            try managedContext.save()
+            dismissDone()
+        }
+        catch{
+            print("Error saving todo: \(error)")
+        }
+        
+    
+        dismiss(animated: true)
+        
     }
     /*
     // MARK: - Navigation
@@ -59,4 +107,18 @@ class AddTodoVC: UIViewController {
     }
     */
 
+    
+}
+
+extension AddTodoVC: UITextViewDelegate{
+    func textViewDidChangeSelection(_ textView: UITextView){
+        if doneButton.isHidden{
+            textView.text.removeAll()
+            textView.textColor = .black
+            doneButton.isHidden = false;
+            UIView.animate(withDuration: 0.3){
+                self.view.layoutIfNeeded()
+            }
+        }
+    }
 }
