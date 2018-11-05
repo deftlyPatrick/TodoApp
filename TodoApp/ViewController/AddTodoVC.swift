@@ -22,14 +22,14 @@ class AddTodoVC: UIViewController {
     @IBOutlet weak var segmentedControl: UISegmentedControl!
     @IBOutlet weak var doneButton: UIButton!
     @IBOutlet weak var bottomConstraint: NSLayoutConstraint!
-    
-    
 
     override func viewDidLoad() {
         super.viewDidLoad()
 
         // Do any additional setup after loading the view.
-        NotificationCenter.default.addObserver(self,
+        
+        //loads keyboard
+            NotificationCenter.default.addObserver(self,
                                                selector: #selector(keyboardWillShow(with:)),
                                                name: UIResponder.keyboardWillShowNotification,
                                                object:nil)
@@ -38,18 +38,20 @@ class AddTodoVC: UIViewController {
         textView.becomeFirstResponder()
         
         if let todo = todo{
-            textView.text = todo.title
-            textView.text = todo.title
+            textView.text = todo.listVar
+            textView.text = todo.listVar
             segmentedControl.selectedSegmentIndex = Int(todo.priorityLevel)
         }
     }
     
     // Mark: - Actions
     
+    //displays keyboard with an animation
     @objc func keyboardWillShow(with notification: Notification){
         let key = "UIKeyboardFrameEndUserInfoKey"
         guard let keyboardFrame = notification.userInfo?[key] as? NSValue else { return }
         
+        //puts a gap between the keyboard and
         let keyboardHeight = keyboardFrame.cgRectValue.height + 15
         
         bottomConstraint.constant = keyboardHeight
@@ -68,23 +70,33 @@ class AddTodoVC: UIViewController {
     }
     
     @IBAction func done(_ sender: UIButton) {
-        guard let title = textView.text, !title.isEmpty else{
+        guard let listVar = textView.text, !listVar.isEmpty else{
             return
         }
         
+ 
+        
+        
         if let todo = self.todo{
-            todo.title = title
+            todo.listVar = listVar
             todo.priorityLevel = Int16(segmentedControl.selectedSegmentIndex)
         }
         else{
             let todo = Todo(context: managedContext)
-            todo.title = title
+            todo.listVar = listVar
             todo.priorityLevel = Int16(segmentedControl.selectedSegmentIndex)
             todo.date = Date()
+            
+            /*let date = Date()
+            let formatter = DateFormatter()
+            formatter.dateFormat = "MM.dd.yyyy"
+            let result = formatter.string(from: date)
+            print(result)
+            */
+            
+            
         }
         
-       
-    
         do{
             try managedContext.save()
             dismissDone()
@@ -112,6 +124,8 @@ class AddTodoVC: UIViewController {
 
 extension AddTodoVC: UITextViewDelegate{
     func textViewDidChangeSelection(_ textView: UITextView){
+        // for when a character is pressed the instant words will be changed to the person's typing or deleting
+        // displays the done button when something is pressed
         if doneButton.isHidden{
             textView.text.removeAll()
             textView.textColor = .black
